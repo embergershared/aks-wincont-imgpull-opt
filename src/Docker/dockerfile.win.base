@@ -73,7 +73,7 @@ RUN NET USER appuser /add; NET LOCALGROUP Administrators /add appuser; `
 
 # Clean some Chocolatey caches (non-fatal if missing)
 RUN if (Test-Path 'C:\\ProgramData\\chocolatey\\cache') { `
-      Get-ChildItem -Path 'C:\\ProgramData\\chocolatey\\cache' -Recurse -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue; `
+    Get-ChildItem -Path 'C:\\ProgramData\\chocolatey\\cache' -Recurse -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue; `
     }
 
 # App layer comes late (sources are copied near the end), which hurts caching on purpose here
