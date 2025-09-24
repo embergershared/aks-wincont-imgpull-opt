@@ -1,0 +1,89 @@
+# escape=`
+# syntax=docker/dockerfile:1.6
+
+# Baseline intentionally mirrors a heavy, many-layer setup (step1/2/4 style)
+# - Uses .NET Framework 4.8 base (compatible with Chocolatey v2.x)
+# - Downloads nuget/vscollect, installs Chocolatey, VC++ Build Tools 2015, vcredist2017
+# - Installs Node LTS via Chocolatey and python2, sets npm msvs version
+# - Copies app and runs npm install
+# This is not optimized; it is meant to be slow on cold builds to reflect reality.
+
+# ---- Stage: downloader (prefetch as in step1) ----
+FROM mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-ltsc2019 AS downloader
+SHELL ["powershell.exe", "-ExecutionPolicy", "Bypass", "-Command", "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue';"]
+
+ENV NUGET_URI=https://dist.nuget.org/win-x86-commandline/v4.1.0/nuget.exe
+RUN New-Item -Path C:\bin -Type Directory -Force | Out-Null; `
+    $mPath = [System.Environment]::GetEnvironmentVariable('PATH','Machine'); `
+    $newPath = $mPath + ';C:\bin'; `
+    [System.Environment]::SetEnvironmentVariable('PATH', $newPath, 'Machine'); `
+    Invoke-WebRequest -Uri $env:NUGET_URI -OutFile C:\bin\nuget.exe
+RUN Invoke-WebRequest -Uri https://aka.ms/vscollect.exe -OutFile C:\collect.exe
+
+# Note: Some setups download Oracle Instant Client and register ODBC here.
+# We omit this by default due to licensing and network constraints.
+# Uncomment and use at your own risk.
+# ARG ORACLE_ENABLE=0
+# RUN if ($env:ORACLE_ENABLE -eq '1') { `
+#   Invoke-WebRequest -Uri https://download.oracle.com/otn_software/nt/instantclient/1920000/instantclient-basiclite-nt-19.20.0.0.0dbru.zip -OutFile C:\instantclient.zip; `
+#   Expand-Archive C:\instantclient.zip C:\oracle; `
+#   Invoke-WebRequest -Uri https://download.oracle.com/otn_software/nt/instantclient/1920000/instantclient-odbc-nt-19.20.0.0.0dbru.zip -OutFile C:\instantodbc.zip; `
+#   Expand-Archive C:\instantodbc.zip C:\oracle; `
+#   Remove-Item C:\instantclient.zip -Force; Remove-Item C:\instantodbc.zip -Force; }
+
+# ---- Stage: baseline (reference-like) ----
+FROM mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-ltsc2019
+SHELL ["powershell.exe", "-ExecutionPolicy", "Bypass", "-Command", "$ErrorActionPreference='Stop'; $ProgressPreference='SilentlyContinue';"]
+
+# Bring tools from downloader (nuget.exe, collect.exe)
+RUN New-Item -Path C:\bin -Type Directory -Force | Out-Null
+COPY --from=downloader C:\bin\nuget.exe C:\bin\nuget.exe
+COPY --from=downloader C:\collect.exe C:\collect.exe
+
+# Install Chocolatey
+RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; `
+    iwr https://chocolatey.org/install.ps1 -UseBasicParsing | iex
+
+# Enable auto-confirm
+RUN choco feature enable -n allowGlobalConfirmation
+
+# Install VC++ Build Tools 2015 (pinned 14.0.25420.1) and vcredist2017
+RUN choco install microsoft-visual-cpp-build-tools --version 14.0.25420.1 --no-progress
+RUN choco install vcredist2017 --no-progress
+
+# Optional: import TLS settings if provided (e.g., tls.reg)
+RUN if (Test-Path 'C:\bin\tls.reg') { reg import C:\bin\tls.reg } else { Write-Host 'tls.reg not present; skipping' }
+
+# Install NodeJS LTS via Chocolatey (as in step2) and python2
+ARG NODE_LTS_VERSION=14.17.3
+RUN choco install nodejs-lts --version $env:NODE_LTS_VERSION --no-progress
+RUN choco install python2 --no-progress
+
+# Set npm msvs version
+RUN npm config set msvs_version 2017 --global; npm config get msvs_version
+
+# Create admin-like user (added to Administrators)
+RUN NET USER appuser /add; NET LOCALGROUP Administrators /add appuser; `
+    $prev = $ErrorActionPreference; $ErrorActionPreference='Continue'; `
+    $LASTEXITCODE = 0; `
+    wmic path Win32_UserAccount where "Name='appuser' and LocalAccount='True'" set PasswordExpires=FALSE; `
+    if ($LASTEXITCODE -ne 0) { Write-Host 'WMIC query failed; skipping PasswordExpires tweak.' }; `
+    $ErrorActionPreference = $prev; `
+    Write-Host 'User created.'
+
+# Clean some Chocolatey caches (non-fatal if missing)
+RUN if (Test-Path 'C:\\ProgramData\\chocolatey\\cache') { `
+      Get-ChildItem -Path 'C:\\ProgramData\\chocolatey\\cache' -Recurse -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue; `
+    }
+
+# App layer comes late (sources are copied near the end), which hurts caching on purpose here
+WORKDIR C:\app
+COPY . C:\app
+COPY poc-windows/package.json C:\app\package.json
+COPY poc-windows/src C:\app\src
+
+# Install app deps (not using lockfile in baseline to mimic drift and slowness)
+RUN npm install --no-audit --no-fund
+
+USER appuser
+CMD ["node", "C:\\app\\src\\index.js"]
