@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: acr-base-pod-19
+  namespace: win-cont-base
+spec:
+  containers:
+    - name: windows-container
+      image: acrusw3391575s4halwincont.azurecr.io/run48-lsc2019:latest
+      command: ["powershell", "-Command", "Start-Sleep -Seconds 3600"]
+      resources:
+        requests:
+          memory: "2Gi"
+          cpu: "1"
+        limits:
+          memory: "4Gi"
+          cpu: "2"
+      securityContext:
+        runAsUser: 0 # Run as Administrator (Windows)
+  nodeSelector:
+    kubernetes.io/os: windows # Ensure scheduling on Windows nodes
+    kubernetes.azure.com/agentpool: win19
+
+
+# Events:
+#   Type    Reason     Age   From               Message
+#   ----    ------     ----  ----               -------
+  # Normal   Scheduled  8m59s                default-scheduler  Successfully assigned win-cont-base/acr-base-pod to akswin000002
+  # Normal   Pulled     3m13s                kubelet            Successfully pulled image "acrusw3391575s4halwincont.azurecr.io/run48-lsc2019:latest" in 5m44.439s (5m44.439s including waiting). Image size: 3072610852 bytes.
+  # Normal   Pulled     3m7s                 kubelet            Successfully pulled image "acrusw3391575s4halwincont.azurecr.io/run48-lsc2019:latest" in 433ms (433ms including waiting). Image size: 3072610852 bytes.
+  # Normal   Pulled     2m47s                kubelet            Successfully pulled image "acrusw3391575s4halwincont.azurecr.io/run48-lsc2019:latest" in 128ms (128ms including waiting). Image size: 3072610852 bytes.
+  # Normal   Pulled     2m11s                kubelet            Successfully pulled image "acrusw3391575s4halwincont.azurecr.io/run48-lsc2019:latest" in 179ms (179ms including waiting). Image size: 3072610852 bytes.
+  # Normal   Pulling    82s (x5 over 8m57s)  kubelet            Pulling image "acrusw3391575s4halwincont.azurecr.io/run48-lsc2019:latest"
+  # Normal   Created    82s (x5 over 3m13s)  kubelet            Created container: windows-container
+  # Normal   Pulled     82s                  kubelet            Successfully pulled image "acrusw3391575s4halwincont.azurecr.io/run48-lsc2019:latest" in 205ms (205ms including waiting). Image size: 3072610852 bytes.
+  # Warning  Failed     77s (x5 over 3m8s)   kubelet            Error: failed to create containerd task: failed to create shim task: hcs::CreateComputeSystem windows-container: The container operating system does not match the host operating system.: unknown
+  # Warning  BackOff    2s (x14 over 3m2s)   kubelet            Back-off restarting failed container windows-container in pod acr-base-pod_win-cont-base(464efa7e-48a2-43b9-9fe8-486d99c2e872)

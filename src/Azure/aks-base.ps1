@@ -13,21 +13,21 @@ az group create --name $resourceGroupName --location $location
 
 # Get and validate the Windows admin password
 do {
-    $windowsAdminPassword = Read-Host -Prompt "Enter Windows admin password (min 14 chars): " -AsSecureString | ConvertFrom-SecureString -AsPlainText
-    if ($windowsAdminPassword.Length -lt 14) {
-        Write-Host "Password must be at least 14 characters long." -ForegroundColor Red
-    }
-    elseif ($windowsAdminPassword.Length -gt 123) {
-        Write-Host "Password must not exceed 123 characters." -ForegroundColor Red
-    }
-    # Add complexity requirements check
-    elseif (-not ($windowsAdminPassword -match '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{14,123}$')) {
-        Write-Host "Password must contain at least: 1 lowercase letter, 1 uppercase letter, 1 number, and 1 special character." -ForegroundColor Red
-    }
+  $windowsAdminPassword = Read-Host -Prompt "Enter Windows admin password (min 14 chars): " -AsSecureString | ConvertFrom-SecureString -AsPlainText
+  if ($windowsAdminPassword.Length -lt 14) {
+    Write-Host "Password must be at least 14 characters long." -ForegroundColor Red
+  }
+  elseif ($windowsAdminPassword.Length -gt 123) {
+    Write-Host "Password must not exceed 123 characters." -ForegroundColor Red
+  }
+  # Add complexity requirements check
+  elseif (-not ($windowsAdminPassword -match '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{14,123}$')) {
+    Write-Host "Password must contain at least: 1 lowercase letter, 1 uppercase letter, 1 number, and 1 special character." -ForegroundColor Red
+  }
 } while (
-    $windowsAdminPassword.Length -lt 14 -or 
-    $windowsAdminPassword.Length -gt 123 -or 
-    -not ($windowsAdminPassword -match '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{14,123}$')
+  $windowsAdminPassword.Length -lt 14 -or 
+  $windowsAdminPassword.Length -gt 123 -or 
+  -not ($windowsAdminPassword -match '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{14,123}$')
 )
 Write-Host "Password validation successful!" -ForegroundColor Green
 
@@ -61,8 +61,21 @@ az aks create -g $resourceGroupName `
 $winNodesVmSize = "Standard_D8_v5"  # Example Gen1 VM size
 # Add a windows node pool
 az aks nodepool add -g $resourceGroupName `
-  -n "win" `
+  -n "win22" `
   --os-type Windows `
+  --os-sku Windows2022 `
+  --mode User `
+  --node-count 2 `
+  --node-vm-size $winNodesVmSize `
+  --kubernetes-version $kubernetesVersion `
+  --cluster-name $aksClusterName
+
+
+az aks nodepool add -g $resourceGroupName `
+  -n "win19" `
+  --os-type Windows `
+  --os-sku Windows2019 `
+  --mode User `
   --node-count 2 `
   --node-vm-size $winNodesVmSize `
   --kubernetes-version $kubernetesVersion `
@@ -88,3 +101,10 @@ az acr login -n $acrName
 az acr import -n $acrName `
   --source mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-ltsc2019 `
   --image run48-lsc2019
+
+
+# pull the public base image from mcr to the ACR
+az acr login -n $acrName
+az acr import -n $acrName `
+  --source mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-ltsc2022 `
+  --image run48-lsc2022

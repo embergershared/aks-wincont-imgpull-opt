@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mcr-base-pod-22
+  namespace: win-cont-base
+spec:
+  containers:
+    - name: windows-container
+      image: mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-ltsc2022
+      command: ["powershell", "-Command", "Start-Sleep -Seconds 3600"]
+      resources:
+        requests:
+          memory: "2Gi"
+          cpu: "1"
+        limits:
+          memory: "4Gi"
+          cpu: "2"
+      securityContext:
+        runAsUser: 0 # Run as Administrator (Windows)
+  nodeSelector:
+    kubernetes.io/os: windows # Ensure scheduling on Windows nodes
+    kubernetes.azure.com/agentpool: win22
+
+
+# Events:
+#   Type    Reason     Age   From               Message
+#   ----    ------     ----  ----               -------
+#   Normal  Scheduled  2m8s  default-scheduler  Successfully assigned win-cont-base/win-sample-pod to akswin000000
+#   Normal  Pulling    2m7s  kubelet            Pulling image "mcr.microsoft.com/windows/servercore:ltsc2022"
+#   Normal  Pulled     2m7s  kubelet            Successfully pulled image "mcr.microsoft.com/windows/servercore:ltsc2022" in 323ms (323ms including waiting). Image size: 2220960421 bytes.
+#   Normal  Created    2m7s  kubelet            Created container: windows-container
+#   Normal  Started    106s  kubelet            Started container windows-container
