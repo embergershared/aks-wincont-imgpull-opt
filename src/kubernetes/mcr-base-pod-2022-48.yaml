@@ -1,8 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: mcr-base-pod-22
-  namespace: win-cont-base
+  name: mcr-base-pod-2022-48
 spec:
   containers:
     - name: windows-container

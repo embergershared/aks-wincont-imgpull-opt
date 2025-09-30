@@ -44,6 +44,7 @@ az aks create -g $resourceGroupName `
   --generate-ssh-keys `
   --windows-admin-password $windowsAdminPassword `
   --windows-admin-username "azureuser" `
+  --generate-ssh-keys `
   --enable-managed-identity `
   --enable-aad `
   --enable-azure-rbac
@@ -58,28 +59,25 @@ az aks create -g $resourceGroupName `
 # Getting Gen 1 VM sizes list from Azure CLI:
 # az vm list-skus --location eastus3 --output table --query "[?capabilities[?name=='HyperVGenerations' && contains(value, 'V1')] && resourceType=='virtualMachines'].name"
 
+
 $winNodesVmSize = "Standard_D8_v5"  # Example Gen1 VM size
-# Add a windows node pool
-az aks nodepool add -g $resourceGroupName `
-  -n "win22" `
-  --os-type Windows `
-  --os-sku Windows2022 `
-  --mode User `
-  --node-count 2 `
-  --node-vm-size $winNodesVmSize `
-  --kubernetes-version $kubernetesVersion `
-  --cluster-name $aksClusterName
+# Add windows node pools
+$windowsVersions = @(
+  @{ name = "win22"; sku = "Windows2022" },
+  @{ name = "win19"; sku = "Windows2019" }
+)
 
-
-az aks nodepool add -g $resourceGroupName `
-  -n "win19" `
-  --os-type Windows `
-  --os-sku Windows2019 `
-  --mode User `
-  --node-count 2 `
-  --node-vm-size $winNodesVmSize `
-  --kubernetes-version $kubernetesVersion `
-  --cluster-name $aksClusterName
+foreach ($winVer in $windowsVersions) {
+  az aks nodepool add -g $resourceGroupName `
+    -n $winVer.name `
+    --os-type Windows `
+    --os-sku $winVer.sku `
+    --mode User `
+    --node-count 2 `
+    --node-vm-size $winNodesVmSize `
+    --kubernetes-version $kubernetesVersion `
+    --cluster-name $aksClusterName
+}
 
 
 # Create the ACR registry
@@ -96,15 +94,61 @@ az aks update -g $resourceGroupName `
   --attach-acr $acrName
 
 
-# pull the public base image from mcr to the ACR
+# Import the tested images in the ACR
+$frameworkVersions = @("4.8", "3.5")
+$windowsVersions = @("2019", "2022")
+
+# Login to the ACR (Reminder: Docker engine must be running)
 az acr login -n $acrName
-az acr import -n $acrName `
-  --source mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-ltsc2019 `
-  --image run48-lsc2019
+
+# Import all images using a matrix import approach
+foreach ($version in $frameworkVersions) {
+  foreach ($winVer in $windowsVersions) {
+    $sourceImage = "mcr.microsoft.com/dotnet/framework/runtime:$version-windowsservercore-ltsc$($winVer)"
+    $targetImage = "run$($version.Replace('.',''))-svrcore-ltsc$($winVer)"
+
+    Write-Host "Importing $sourceImage as $acrName/$targetImage..."
+    az acr import -n $acrName `
+      --source $sourceImage `
+      --image $targetImage
+  }
+}
+
+$windowsVersions = @(
+  @{ name = "win22"; sku = "Windows2022" },
+  @{ name = "win19"; sku = "Windows2019" }
+)
+# Scale to 0 Windows node pools
+foreach ($winVer in $windowsVersions) {
+  $nodepoolName = $winVer.name
+  Write-Host "Scaling nodepool $nodepoolName to 0 nodes..."
+  az aks nodepool scale `
+    --resource-group $resourceGroupName `
+    --cluster-name $aksClusterName `
+    --name $nodepoolName `
+    --node-count 0
+}
+
+# Scale to 1 Windows node pools
+foreach ($winVer in $windowsVersions) {
+  $nodepoolName = $winVer.name
+  Write-Host "Scaling nodepool $nodepoolName to 1 nodes..."
+  az aks nodepool scale `
+    --resource-group $resourceGroupName `
+    --cluster-name $aksClusterName `
+    --name $nodepoolName `
+    --node-count 1
+}
 
 
-# pull the public base image from mcr to the ACR
-az acr login -n $acrName
-az acr import -n $acrName `
-  --source mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-ltsc2022 `
-  --image run48-lsc2022
+az aks command invoke `
+  --resource-group $resourceGroupName `
+  --name $aksClusterName `
+  --command "powershell" `
+  --node-name akswin22000007
+
+az aks nodepool exec `
+  --resource-group $resourceGroupName `
+  --cluster-name $aksClusterName `
+  --nodepool-name "win22" `  # or "win19" for Windows Server 2019 nodes
+--command "powershell"

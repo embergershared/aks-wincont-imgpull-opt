@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: acr-base-pod-22
+  name: acr-base-pod-2019-35
   namespace: win-cont-base
 spec:
   containers:
     - name: windows-container
-      image: acrusw3391575s4halwincont.azurecr.io/run48-lsc2022:latest
+      image: acrusw3391575s4halwincont.azurecr.io/run35-ltsc2019:latest
       command: ["powershell", "-Command", "Start-Sleep -Seconds 3600"]
       resources:
         requests:
@@ -19,4 +19,5 @@ spec:
         runAsUser: 0 # Run as Administrator (Windows)
   nodeSelector:
     kubernetes.io/os: windows # Ensure scheduling on Windows nodes
-    kubernetes.azure.com/agentpool: win22
+    kubernetes.azure.com/agentpool: win19
+

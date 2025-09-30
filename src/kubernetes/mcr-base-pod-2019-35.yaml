@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mcr-base-pod-2019-35
+  namespace: win-cont-base
+spec:
+  containers:
+    - name: windows-container
+      image: mcr.microsoft.com/dotnet/framework/runtime:3.5-windowsservercore-ltsc2019
+      command: ["powershell", "-Command", "Start-Sleep -Seconds 3600"]
+      resources:
+        requests:
+          memory: "2Gi"
+          cpu: "1"
+        limits:
+          memory: "4Gi"
+          cpu: "2"
+      securityContext:
+        runAsUser: 0 # Run as Administrator (Windows)
+  nodeSelector:
+    kubernetes.io/os: windows # Ensure scheduling on Windows nodes
+    kubernetes.azure.com/agentpool: win19
+
+# Events:
+#   Type     Reason       Age    From               Message
+#   ----     ------       ----   ----               -------
+#   Normal   Scheduled    5m13s  default-scheduler  Successfully assigned win-cont-base/mcr-base-pod-19 to akswin19000006
+#   Warning  FailedMount  5m13s  kubelet            MountVolume.SetUp failed for volume "kube-api-access-bwfdm" : failed to sync configmap cache: timed out waiting for the condition
+#   Normal   Pulling      5m11s  kubelet            Pulling image "mcr.microsoft.com/dotnet/framework/runtime:3.5-windowsservercore-ltsc2019"
+#   Normal   Pulled       85s    kubelet            Successfully pulled image "mcr.microsoft.com/dotnet/framework/runtime:3.5-windowsservercore-ltsc2019" in 3m45.204s (3m45.204s including waiting). Image size: 3077289357 bytes.
+#   Normal   Created      85s    kubelet            Created container: windows-container
+#   Normal   Started      60s    kubelet            Started container windows-container
