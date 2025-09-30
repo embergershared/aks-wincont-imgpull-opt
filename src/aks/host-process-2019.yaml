@@ -1,0 +1,61 @@
+# https://learn.microsoft.com/en-us/azure/aks/node-access#use-host-process-container-to-access-windows-node
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    pod: hpc-2019
+  name: hpc-2019
+spec:
+  securityContext:
+    windowsOptions:
+      hostProcess: true
+      runAsUserName: "NT AUTHORITY\\SYSTEM"
+  hostNetwork: true
+  containers:
+    - name: hpc
+      image: mcr.microsoft.com/windows/servercore:ltsc1809
+      command:
+        - powershell.exe
+        - -Command
+        - "Start-Sleep 2147483"
+      imagePullPolicy: IfNotPresent
+  nodeSelector:
+    kubernetes.io/os: windows
+    kubernetes.io/hostname: akswin19000008
+  tolerations:
+    - effect: NoSchedule
+      key: node.kubernetes.io/unschedulable
+      operator: Exists
+    - effect: NoSchedule
+      key: node.kubernetes.io/network-unavailable
+      operator: Exists
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+
+# # Enter the pod
+# kubectl exec -it hpc-2019 -- powershell
+
+# Go to root
+# cd C:\
+
+# # List running containers with containerd for kubernetes
+# crictl ps
+
+# # List all images
+# crictl images
+
+# # List specific image
+# crictl images | findstr "mcr.microsoft.com/dotnet"
+
+# # Pull an image
+# crictl pull mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-ltsc2022
+
+# # Remove a specific image (you'll need the image ID)
+# crictl rmi mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-ltsc2022
+
+# # Remove unused images
+# crictl rmi --prune
+
+
+# kubectl exec hpc-2019 -- powershell "crictl rmi mcr.microsoft.com/windows/servercore:ltsc2019"

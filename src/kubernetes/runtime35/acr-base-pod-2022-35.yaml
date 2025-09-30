@@ -6,7 +6,7 @@ metadata:
 spec:
   containers:
     - name: windows-container
-      image: acrusw3391575s4halwincont.azurecr.io/run35-ltsc2022:latest
+      image: acrusw3391575s4halwincont.azurecr.io/run35-svrcore-ltsc2022:latest
       command: ["powershell", "-Command", "Start-Sleep -Seconds 3600"]
       resources:
         requests:

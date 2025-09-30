@@ -73,10 +73,23 @@ foreach ($winVer in $windowsVersions) {
     --os-type Windows `
     --os-sku $winVer.sku `
     --mode User `
-    --node-count 2 `
+    --node-count 1 `
     --node-vm-size $winNodesVmSize `
     --kubernetes-version $kubernetesVersion `
     --cluster-name $aksClusterName
+}
+
+foreach ($winVer in $windowsVersions) {
+  az aks nodepool add -g $resourceGroupName `
+    -n "$($winVer.name)u" `
+    --os-type Windows `
+    --os-sku $winVer.sku `
+    --mode User `
+    --node-count 1 `
+    --node-vm-size $winNodesVmSize `
+    --kubernetes-version $kubernetesVersion `
+    --cluster-name $aksClusterName `
+    --enable-ultra-ssd
 }
 
 
@@ -119,36 +132,40 @@ $windowsVersions = @(
   @{ name = "win19"; sku = "Windows2019" }
 )
 # Scale to 0 Windows node pools
-foreach ($winVer in $windowsVersions) {
+# Scale Windows node pools in parallel
+$jobs = foreach ($winVer in $windowsVersions) {
   $nodepoolName = $winVer.name
-  Write-Host "Scaling nodepool $nodepoolName to 0 nodes..."
-  az aks nodepool scale `
-    --resource-group $resourceGroupName `
-    --cluster-name $aksClusterName `
-    --name $nodepoolName `
-    --node-count 0
+  Write-Host "Starting scale job for nodepool $nodepoolName to 0 nodes..."
+  Start-Job -ScriptBlock {
+    param($resourceGroupName, $aksClusterName, $nodepoolName)
+    az aks nodepool scale `
+      --resource-group $resourceGroupName `
+      --cluster-name $aksClusterName `
+      --name $nodepoolName `
+      --node-count 0
+  } -ArgumentList $resourceGroupName, $aksClusterName, $nodepoolName
 }
+# Wait for all scaling operations to complete
+Write-Host "Waiting for all nodepool scaling operations to complete..."
+$jobs | Wait-Job | Receive-Job
+Remove-Job -Job $jobs
 
-# Scale to 1 Windows node pools
-foreach ($winVer in $windowsVersions) {
+
+# Scale to 1 Windows node pools in parallel
+$jobs = foreach ($winVer in $windowsVersions) {
   $nodepoolName = $winVer.name
-  Write-Host "Scaling nodepool $nodepoolName to 1 nodes..."
-  az aks nodepool scale `
-    --resource-group $resourceGroupName `
-    --cluster-name $aksClusterName `
-    --name $nodepoolName `
-    --node-count 1
+  Write-Host "Starting scale job for nodepool $nodepoolName to 1 node..."
+  Start-Job -ScriptBlock {
+    param($resourceGroupName, $aksClusterName, $nodepoolName)
+    az aks nodepool scale `
+      --resource-group $resourceGroupName `
+      --cluster-name $aksClusterName `
+      --name $nodepoolName `
+      --node-count 1
+  } -ArgumentList $resourceGroupName, $aksClusterName, $nodepoolName
 }
+# Wait for all scaling operations to complete
+Write-Host "Waiting for all nodepool scaling operations to complete..."
+$jobs | Wait-Job | Receive-Job
+Remove-Job -Job $jobs
 
-
-az aks command invoke `
-  --resource-group $resourceGroupName `
-  --name $aksClusterName `
-  --command "powershell" `
-  --node-name akswin22000007
-
-az aks nodepool exec `
-  --resource-group $resourceGroupName `
-  --cluster-name $aksClusterName `
-  --nodepool-name "win22" `  # or "win19" for Windows Server 2019 nodes
---command "powershell"

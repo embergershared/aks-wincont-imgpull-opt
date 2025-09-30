@@ -3,8 +3,8 @@ apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    pod: hpc
-  name: hpc
+    pod: hpc-2022
+  name: hpc-2022
 spec:
   securityContext:
     windowsOptions:
@@ -21,7 +21,7 @@ spec:
       imagePullPolicy: IfNotPresent
   nodeSelector:
     kubernetes.io/os: windows
-    kubernetes.io/hostname: akswin22000007
+    kubernetes.io/hostname: akswin22000008
   tolerations:
     - effect: NoSchedule
       key: node.kubernetes.io/unschedulable
@@ -34,7 +34,7 @@ spec:
       operator: Exists
 
 # # Enter the pod
-# kubectl exec -it hpc -- powershell
+# kubectl exec -it hpc-2022 -- powershell
 
 # Go to root
 # cd C:\
@@ -56,3 +56,6 @@ spec:
 
 # # Remove unused images
 # crictl rmi --prune
+
+
+# kubectl exec hpc-2022 -- powershell "crictl rmi mcr.microsoft.com/windows/servercore:ltsc2022"

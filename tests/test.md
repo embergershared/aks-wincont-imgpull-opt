@@ -19,33 +19,32 @@
 4. ACR Features:
    - Standard (ACR streaming OFF)
    - ACR streaming ON (only applicable for ACR source)
+   - Only for Linux AMD x64 nodes => not an option for Windows nodes
 
 ## Test Combinations Matrix
 
-| Test ID | Base Image | Image Source | Node Storage | ACR Streaming | .NET Framework | Duration (s) | Notes |
-|---------|------------|--------------|--------------|---------------|----------------|--------------|-------|
+| Test ID | Base Image | Image Source | Node Storage | .NET Framework | Duration (s) | Notes |
+|---------|------------|--------------|--------------|----------------|--------------|-------|
 
 # .NET Framework 3.5
 
-| T1      | Win2019    | MCR          | Standard     | OFF           | 3.5            |    253       |       |
-| T2      | Win2022    | MCR          | Standard     | OFF           | 3.5            |     84       |       |
+| T1      | Win2019    | MCR          | Standard     | 3.5            |     309      |       |
+| T2      | Win2022    | MCR          | Standard     | 3.5            |     140      |   54% faster than 2019    |
 
-| T3      | Win2019    | ACR          | Standard     | OFF           | 3.5            |              |       |
-| T4      | Win2022    | ACR          | Standard     | OFF           | 3.5            |              |       |
+| T3      | Win2019    | ACR          | Standard     | 3.5            |     301      |       |
+| T4      | Win2022    | ACR          | Standard     | 3.5            |     249      |   17% faster than 2019    |
+
+| T12     | Win2019    | ACR          | Ultra SSDs   | 3.5            |              |       |
+| T12     | Win2022    | ACR          | Ultra SSDs   | 3.5            |              |       |
 
 # .NET Framework 4.8
 
-| T5      | Win2019    | MCR          | Standard     | OFF           | 4.8            |                |       |
-| T6      | Win2022    | MCR          | Standard     | OFF           | 4.8            |                |       |
+| T5      | Win2019    | MCR          | Standard     | 4.8            |      363     |       |
+| T6      | Win2022    | MCR          | Standard     | 4.8            |       17     |   95% faster than 2019    |
 
+| T5      | Win2019    | ACR          | Standard     | 4.8            |      362     |       |
+| T6      | Win2022    | ACR          | Standard     | 4.8            |       22     |   94% faster than 2019    |
 
-
-| T7      | Win2022    | MCR          | Standard     | N/A           | 4.8            |                |       |
-| T8      | Win2022    | MCR          | Standard     | N/A           | 4.8            |                |       |
-| T9      | Win2022    | ACR          | Standard     | OFF           | 4.8            |                |       |
-| T10     | Win2022    | ACR          | Standard     | ON            | 4.8            |                |       |
-| T11     | Win2022    | ACR          | Ultra        | OFF           | 4.8            |                |       |
-| T12     | Win2022    | ACR          | Ultra        | ON            | 4.8            |                |       |
 
 ## Test Procedure
 
