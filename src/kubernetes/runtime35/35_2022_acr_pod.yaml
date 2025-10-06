@@ -23,12 +23,15 @@ spec:
 
 ##########################   COLD start results:
 # # Run 1
-
-
-
-
-
-
+# # # Events:
+# # #   Type    Reason     Age    From               Message
+# # #   ----    ------     ----   ----               -------
+# # #   Normal  Scheduled  5m     default-scheduler  Successfully assigned winpods-tests/35-2019-acr-pod to akswin19000003
+# # #   Normal  Pulling    4m58s  kubelet            Pulling image "acrusw3391575s4halwincont.azurecr.io/run35-svrcore-ltsc2019"
+# # #   Normal  Pulled     118s   kubelet            Successfully pulled image "acrusw3391575s4halwincont.azurecr.io/run35-svrcore-ltsc2019" in 3m0.288s (3m0.288s including waiting). Image size: 3077289357 bytes.
+# # #   Normal  Created    118s   kubelet            Created container: windows-container
+# # #   Normal  Started    95s    kubelet            Started container windows-container
+# => Scheduled to Started: 3m 25s / image pull: 3m / Size: ~3.1 GB
 
 
 
@@ -43,3 +46,14 @@ spec:
 # # #   Normal  Created    27s   kubelet            Created container: windows-container
 # # #   Normal  Started    26s   kubelet            Started container windows-container
 # # =>  Scheduled to Started: 3s / image pull: <1s / Size: ~2.8 GB
+
+# # Run 2
+# # # Events:
+# # #   Type    Reason     Age   From               Message
+# # #   ----    ------     ----  ----               -------
+# # #   Normal  Scheduled  34s   default-scheduler  Successfully assigned winpods-tests/35-2019-acr-pod to akswin19000003
+# # #   Normal  Pulling    33s   kubelet            Pulling image "acrusw3391575s4halwincont.azurecr.io/run35-svrcore-ltsc2019"
+# # #   Normal  Pulled     32s   kubelet            Successfully pulled image "acrusw3391575s4halwincont.azurecr.io/run35-svrcore-ltsc2019" in 425ms (425ms including waiting). Image size: 3077289357 bytes.
+# # #   Normal  Created    32s   kubelet            Created container: windows-container
+# # #   Normal  Started    30s   kubelet            Started container windows-container
+# =>  Scheduled to Started: 4s / image pull: <1s / Size: ~3.1 GB

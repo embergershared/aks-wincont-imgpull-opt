@@ -1,8 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: mcr-base-pod-2019-48
-  namespace: win-cont-base
+  name: 48-2019-mcr-pod
 spec:
   containers:
     - name: windows-container
@@ -22,6 +21,8 @@ spec:
     kubernetes.azure.com/agentpool: win19
 
 
+##########################   COLD start results:
+# # Run 1
 # Events:
 #   Type    Reason     Age   From               Message
 #   ----    ------     ----  ----               -------
@@ -35,3 +36,7 @@ spec:
   # Normal   Pulled     82s                  kubelet            Successfully pulled image "acrusw3391575s4halwincont.azurecr.io/run48-svrcore-lsc2019:latest" in 205ms (205ms including waiting). Image size: 3072610852 bytes.
   # Warning  Failed     77s (x5 over 3m8s)   kubelet            Error: failed to create containerd task: failed to create shim task: hcs::CreateComputeSystem windows-container: The container operating system does not match the host operating system.: unknown
   # Warning  BackOff    2s (x14 over 3m2s)   kubelet            Back-off restarting failed container windows-container in pod acr-base-pod_win-cont-base(464efa7e-48a2-43b9-9fe8-486d99c2e872)
+
+
+##########################   WARM start results:
+# # Run 1

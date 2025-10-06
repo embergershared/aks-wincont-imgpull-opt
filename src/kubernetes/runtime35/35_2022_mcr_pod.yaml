@@ -20,6 +20,7 @@ spec:
     kubernetes.io/os: windows # Ensure scheduling on Windows nodes
     kubernetes.azure.com/agentpool: win22
 
+
 ##########################   COLD start results:
 # # Run 1
 # Events:

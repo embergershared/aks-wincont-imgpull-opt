@@ -1,8 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: acr-base-pod-2022-48
-  namespace: win-cont-base
+  name: 48-2022-acr-pod
 spec:
   containers:
     - name: windows-container
@@ -20,3 +19,11 @@ spec:
   nodeSelector:
     kubernetes.io/os: windows # Ensure scheduling on Windows nodes
     kubernetes.azure.com/agentpool: win22
+
+
+##########################   COLD start results:
+# # Run 1
+
+
+##########################   WARM start results:
+# # Run 1

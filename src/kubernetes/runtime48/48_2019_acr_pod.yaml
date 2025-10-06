@@ -1,8 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: acr-base-pod-2019-48
-  namespace: win-cont-base
+  name: 48-2019-acr-pod
 spec:
   containers:
     - name: windows-container
@@ -22,6 +21,8 @@ spec:
     kubernetes.azure.com/agentpool: win19
 
 
+##########################   COLD start results:
+# # Run 1
 # Events:
 #   Type    Reason     Age    From               Message
 #   ----    ------     ----   ----               -------
@@ -30,3 +31,11 @@ spec:
 #   Normal  Pulled     23s    kubelet            Successfully pulled image "acrusw3391575s4halwincont.azurecr.io/run48-svrcore-ltsc2019:latest" in 3m10.96s (3m10.96s including waiting). Image size: 3072610852 bytes.
 #   Normal  Created    23s    kubelet            Created container: windows-container
 #   Normal  Started    4s     kubelet            Started container windows-container
+# =>  Scheduled to Started: 3m 31s / image pull: 3m 11s / Size: ~3.1 GB
+
+
+##########################   WARM start results:
+# # Run 1
+
+
+

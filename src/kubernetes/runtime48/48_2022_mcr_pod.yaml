@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: mcr-base-pod-2022-48
+  name: 48-2022-48-mcr-pod
 spec:
   containers:
     - name: windows-container
@@ -21,6 +21,8 @@ spec:
     kubernetes.azure.com/agentpool: win22
 
 
+##########################   COLD start results:
+# # Run 1
 # Events:
 #   Type    Reason     Age   From               Message
 #   ----    ------     ----  ----               -------
@@ -29,3 +31,9 @@ spec:
 #   Normal  Pulled     2m7s  kubelet            Successfully pulled image "mcr.microsoft.com/windows/servercore:ltsc2022" in 323ms (323ms including waiting). Image size: 2220960421 bytes.
 #   Normal  Created    2m7s  kubelet            Created container: windows-container
 #   Normal  Started    106s  kubelet            Started container windows-container
+# =>  Scheduled to Started: 1m 2s / image pull: <1s / Size: ~2.2 GB
+
+
+
+##########################   WARM start results:
+# # Run 1
