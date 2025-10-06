@@ -36,6 +36,13 @@ spec:
 
 ##########################   WARM start results:
 # # Run 1
-
-
+# # # Events:
+# # #   Type    Reason     Age   From               Message
+# # #   ----    ------     ----  ----               -------
+# # #   Normal  Scheduled  21s   default-scheduler  Successfully assigned winpods-tests/48-2019-acr-pod to akswin19000004
+# # #   Normal  Pulling    20s   kubelet            Pulling image "acrusw3391575s4halwincont.azurecr.io/run48-svrcore-ltsc2019:latest"
+# # #   Normal  Pulled     19s   kubelet            Successfully pulled image "acrusw3391575s4halwincont.azurecr.io/run48-svrcore-ltsc2019:latest" in 856ms (856ms including waiting). Image size: 3072610852 bytes.
+# # #   Normal  Created    19s   kubelet            Created container: windows-container
+# # #   Normal  Started    17s   kubelet            Started container windows-container
+# =>  Scheduled to Started: 4s / image pull: <1s / Size: ~3.1 GB
 

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: 48-2022-48-mcr-pod
+  name: 48-2022-mcr-pod
 spec:
   containers:
     - name: windows-container
@@ -37,3 +37,12 @@ spec:
 
 ##########################   WARM start results:
 # # Run 1
+# # # Events:
+# # #   Type    Reason     Age   From               Message
+# # #   ----    ------     ----  ----               -------
+# # #   Normal  Scheduled  12s   default-scheduler  Successfully assigned winpods-tests/48-2022-48-mcr-pod to akswin22000004
+# # #   Normal  Pulling    10s   kubelet            Pulling image "mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-ltsc2022"
+# # #   Normal  Pulled     10s   kubelet            Successfully pulled image "mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-ltsc2022" in 308ms (308ms including waiting). Image size: 2374023537 bytes.
+# # #   Normal  Created    10s   kubelet            Created container: windows-container
+# # #   Normal  Started    8s    kubelet            Started container windows-container
+# => Scheduled to Started: 4s / image pull: <1s / Size: ~2.4 GB

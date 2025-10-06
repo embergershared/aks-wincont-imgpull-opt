@@ -37,8 +37,8 @@
 | T4      | Win2022    | MCR          | Warm     | 3.5            |      3     |       |
 | T5      | Win2019    | ACR          | Cold     | 3.5            |     301      |       |
 | T6      | Win2022    | ACR          | Cold     | 3.5            |     249      |   17% faster than 2019    |
-| T7      | Win2019    | ACR          | Warm     | 3.5            |      4s     |       |
-| T8      | Win2022    | ACR          | Warm     | 3.5            |      3s    |       |
+| T7      | Win2019    | ACR          | Warm     | 3.5            |      4     |       |
+| T8      | Win2022    | ACR          | Warm     | 3.5            |      3    |       |
 
 # .NET Framework 4.8
 
@@ -46,12 +46,12 @@
 |---------|------------|--------------|--------------|----------------|--------------|-------|
 | T9       | Win2019    | MCR          | Cold     | 4.8            |      363     |       |
 | T10      | Win2022    | MCR          | Cold     | 4.8            |       17     |   95% faster than 2019    |
-| T11      | Win2019    | MCR          | Warm     | 4.8            |           |       |
-| T12      | Win2022    | MCR          | Warm     | 4.8            |           |     |
+| T11      | Win2019    | MCR          | Warm     | 4.8            |        3   |       |
+| T12      | Win2022    | MCR          | Warm     | 4.8            |       4    |     |
 | T13      | Win2019    | ACR          | Cold     | 4.8            |      362     |       |
 | T14      | Win2022    | ACR          | Cold     | 4.8            |       22     |   94% faster than 2019    |
-| T15      | Win2019    | ACR          | Warm     | 4.8            |           |       |
-| T16      | Win2022    | ACR          | Warm     | 4.8            |           |     |
+| T15      | Win2019    | ACR          | Warm     | 4.8            |       4    |       |
+| T16      | Win2022    | ACR          | Warm     | 4.8            |      4     |     |
 
 ## Pull the image manually on a node
 
