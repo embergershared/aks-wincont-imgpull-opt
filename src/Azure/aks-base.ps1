@@ -175,24 +175,3 @@ Write-Host "Waiting for all nodepool scaling operations to complete..."
 $jobs | Wait-Job | Receive-Job
 Remove-Job -Job $jobs
 
-
-
-### Deploy a new cluster with Ultra disks
-az aks create -g $resourceGroupName `
-  -n $aksClusterName `
-  --location $location `
-  --node-resource-group "$resourceGroupName-managed" `
-  --node-count $nodeCount `
-  --node-vm-size $sysNodesVmSize `
-  --nodepool-name "sys" `
-  --zones 1 2 `
-  --node-count 2 `
-  --kubernetes-version $kubernetesVersion `
-  --generate-ssh-keys `
-  --windows-admin-password $windowsAdminPassword `
-  --windows-admin-username "azureuser" `
-  --generate-ssh-keys `
-  --enable-ultra-ssd `
-  --enable-managed-identity `
-  --enable-aad `
-  --enable-azure-rbac

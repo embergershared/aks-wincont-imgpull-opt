@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: 35-2019-acr-pod
+spec:
+  containers:
+    - name: windows-container
+      image: acrusw3391575s4halwincont.azurecr.io/run35-svrcore-ltsc2019
+      command: ["powershell", "-Command", "Start-Sleep -Seconds 3600"]
+      resources:
+        requests:
+          memory: "2Gi"
+          cpu: "1"
+        limits:
+          memory: "4Gi"
+          cpu: "2"
+      securityContext:
+        runAsUser: 0 # Run as Administrator (Windows)
+  nodeSelector:
+    kubernetes.io/os: windows # Ensure scheduling on Windows nodes
+    kubernetes.azure.com/agentpool: win19
+
+##########################   COLD start results:
+# # Run 1
+
+
+
+
+##########################   WARM start results:
+# # Run 1
+# # # Events:
+# # #   Type    Reason     Age   From               Message
+# # #   ----    ------     ----  ----               -------
+# # #   Normal  Scheduled  13s   default-scheduler  Successfully assigned winpods-tests/35-2019-acr-pod to akswin19000002
+# # #   Normal  Pulling    11s   kubelet            Pulling image "acrusw3391575s4halwincont.azurecr.io/run35-svrcore-ltsc2019"
+# # #   Normal  Pulled     11s   kubelet            Successfully pulled image "acrusw3391575s4halwincont.azurecr.io/run35-svrcore-ltsc2019" in 462ms (462ms including waiting). Image size: 3077289357 bytes.
+# # #   Normal  Created    11s   kubelet            Created container: windows-container
+# # #   Normal  Started    9s    kubelet            Started container windows-container
+# # # =>  Scheduled to Started: 4s / image pull: <1s / Size: ~3.1 GB
