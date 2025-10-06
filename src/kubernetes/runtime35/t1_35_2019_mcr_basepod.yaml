@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: t1-35-2019-mcr-basepod
+spec:
+  containers:
+    - name: windows-container
+      image: mcr.microsoft.com/dotnet/framework/runtime:3.5-windowsservercore-ltsc2019
+      command: ["powershell", "-Command", "Start-Sleep -Seconds 3600"]
+      resources:
+        requests:
+          memory: "2Gi"
+          cpu: "1"
+        limits:
+          memory: "4Gi"
+          cpu: "2"
+      securityContext:
+        runAsUser: 0 # Run as Administrator (Windows)
+  nodeSelector:
+    kubernetes.io/os: windows # Ensure scheduling on Windows nodes
+    kubernetes.azure.com/agentpool: win19
+
+
+# Cold start results:
+# # Run 1
+# # # Events:
+# # #   Type     Reason       Age    From               Message
+# # #   ----     ------       ----   ----               -------
+# # #   Normal   Scheduled    5m13s  default-scheduler  Successfully assigned win-cont-base/t1-35-2019-mcr-basepod to akswin19000006
+# # #   Warning  FailedMount  5m13s  kubelet            MountVolume.SetUp failed for volume "kube-api-access-bwfdm" : failed to sync configmap cache: timed out waiting for the condition
+# # #   Normal   Pulling      5m11s  kubelet            Pulling image "mcr.microsoft.com/dotnet/framework/runtime:3.5-windowsservercore-ltsc2019"
+# # #   Normal   Pulled       85s    kubelet            Successfully pulled image "mcr.microsoft.com/dotnet/framework/runtime:3.5-windowsservercore-ltsc2019" in 3m45.204s (3m45.204s including waiting). Image size: 3077289357 bytes.
+# # #   Normal   Created      85s    kubelet            Created container: windows-container
+# # #   Normal   Started      60s    kubelet            Started container windows-container
+# # =>  Scheduled to Started: 4m 13s / image pull: 3m 45s / Size: ~3.1 GB
+
+# # Run 2
+# # # Events:
+# # #   Type    Reason     Age    From               Message
+# # #   ----    ------     ----   ----               -------
+# # #   Normal  Scheduled  6m34s  default-scheduler  Successfully assigned winpods-tests/t1-35-2019-mcr-basepod to akswin19000002
+# # #   Normal  Pulling    6m32s  kubelet            Pulling image "mcr.microsoft.com/dotnet/framework/runtime:3.5-windowsservercore-ltsc2019"
+# # #   Normal  Pulled     65s    kubelet            Successfully pulled image "mcr.microsoft.com/dotnet/framework/runtime:3.5-windowsservercore-ltsc2019" in 5m26.727s (5m26.727s including waiting). Image size: 3077289357 bytes.
+# # #   Normal  Created    65s    kubelet            Created container: windows-container
+# # #   Normal  Started    27s    kubelet            Started container windows-container
+# # =>  Scheduled to Started: 6m 7s / image pull: 5m 26s / Size: ~3.1 GB
+
+
+# Warm start results:
+# # Run 1
+# # # Events:
+# # #   Type    Reason     Age   From               Message
+# # # ----    ------     ----  ----               -------
+# # # Normal  Scheduled  13s   default-scheduler  Successfully assigned winpods-tests/t1-35-2019-mcr-basepod to akswin19000002
+# # # Normal  Pulled     11s   kubelet            Container image "mcr.microsoft.com/dotnet/framework/runtime:3.5-windowsservercore-ltsc2019" already present on machine
+# # # Normal  Created    11s   kubelet            Created container: windows-container
+# # # Normal  Started    9s    kubelet            Started container windows-container
+# # =>  Scheduled to Started: 4s / image pull: none / Size: ~3.1 GB
+
+# # Run 2
+# # # Events:
+# # #   Type    Reason     Age   From               Message
+# # #   ----    ------     ----  ----               -------
+# # #   Normal  Scheduled  11s   default-scheduler  Successfully assigned winpods-tests/t1-35-2019-mcr-basepod to akswin19000002
+# # #   Normal  Pulled     9s    kubelet            Container image "mcr.microsoft.com/dotnet/framework/runtime:3.5-windowsservercore-ltsc2019" already present on machine
+# # #   Normal  Created    9s    kubelet            Created container: windows-container
+# # #   Normal  Started    7s    kubelet            Started container windows-container
+# # =>  Scheduled to Started: 4s / image pull: none / Size: ~3.1 GB

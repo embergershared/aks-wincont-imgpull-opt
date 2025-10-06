@@ -4,8 +4,8 @@ az account set -s "b8e2cc57-9620-431e-9293-4318e720ba07"
 $resourceGroupName = "rg-usw3-391575-s4-aks-wincont-optim-01"
 $location = "westus3"
 $aksClusterName = "aks-usw3-391575-s4-hal-wincont"
-$nodeCount = 3
-$nodeVmSize = "Standard_D8_v5"
+$nodeCount = 2
+$sysNodesVmSize = "Standard_D8_v5" # 12,800 MaxIOPS
 $kubernetesVersion = "1.32.6"
 
 # Create the resource group
@@ -31,6 +31,8 @@ do {
 )
 Write-Host "Password validation successful!" -ForegroundColor Green
 
+$windowsAdminPassword = 'WinC0ntainer!2025'
+
 
 # Create the AKS cluster
 az aks create -g $resourceGroupName `
@@ -38,12 +40,14 @@ az aks create -g $resourceGroupName `
   --location $location `
   --node-resource-group "$resourceGroupName-managed" `
   --node-count $nodeCount `
-  --node-vm-size $nodeVmSize `
+  --node-vm-size $sysNodesVmSize `
   --nodepool-name "sys" `
   --kubernetes-version $kubernetesVersion `
   --generate-ssh-keys `
+  --zones 2 `
+  --enable-ultra-ssd `
   --windows-admin-password $windowsAdminPassword `
-  --windows-admin-username "azureuser" `
+  --windows-admin-username "azusr" `
   --generate-ssh-keys `
   --enable-managed-identity `
   --enable-aad `
@@ -57,10 +61,11 @@ az aks create -g $resourceGroupName `
 
 # Windows node pools in AKS currently require Generation 1 VM sizes => Standard_D4ds_v4, Standard_D8ds_v4, Standard_DS2_v2
 # Getting Gen 1 VM sizes list from Azure CLI:
-# az vm list-skus --location eastus3 --output table --query "[?capabilities[?name=='HyperVGenerations' && contains(value, 'V1')] && resourceType=='virtualMachines'].name"
+# az vm list-skus --location westus3 --output table --query "[?capabilities[?name=='HyperVGenerations' && contains(value, 'V1')] && resourceType=='virtualMachines'].name"
 
 
 $winNodesVmSize = "Standard_D8_v5"  # Example Gen1 VM size
+
 # Add windows node pools
 $windowsVersions = @(
   @{ name = "win22"; sku = "Windows2022" },
@@ -74,6 +79,7 @@ foreach ($winVer in $windowsVersions) {
     --os-sku $winVer.sku `
     --mode User `
     --node-count 1 `
+    --zone 3 `
     --node-vm-size $winNodesVmSize `
     --kubernetes-version $kubernetesVersion `
     --cluster-name $aksClusterName
@@ -169,3 +175,24 @@ Write-Host "Waiting for all nodepool scaling operations to complete..."
 $jobs | Wait-Job | Receive-Job
 Remove-Job -Job $jobs
 
+
+
+### Deploy a new cluster with Ultra disks
+az aks create -g $resourceGroupName `
+  -n $aksClusterName `
+  --location $location `
+  --node-resource-group "$resourceGroupName-managed" `
+  --node-count $nodeCount `
+  --node-vm-size $sysNodesVmSize `
+  --nodepool-name "sys" `
+  --zones 1 2 `
+  --node-count 2 `
+  --kubernetes-version $kubernetesVersion `
+  --generate-ssh-keys `
+  --windows-admin-password $windowsAdminPassword `
+  --windows-admin-username "azureuser" `
+  --generate-ssh-keys `
+  --enable-ultra-ssd `
+  --enable-managed-identity `
+  --enable-aad `
+  --enable-azure-rbac
