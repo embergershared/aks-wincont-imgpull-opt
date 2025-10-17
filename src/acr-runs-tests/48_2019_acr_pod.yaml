@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: 48-2022-acr-pod
+spec:
+  containers:
+    - name: windows-container
+      image: acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-10gb-ltsc2019:latest
+      command: ["powershell", "-Command", "Start-Sleep -Seconds 3600"]
+      resources:
+        requests:
+          memory: "2Gi"
+          cpu: "1"
+        limits:
+          memory: "4Gi"
+          cpu: "2"
+      securityContext:
+        runAsUser: 0 # Run as Administrator (Windows)
+  nodeSelector:
+    kubernetes.io/os: windows # Ensure scheduling on Windows nodes
+    kubernetes.azure.com/agentpool: win19
+
+
+##########################   COLD start results:
+# # Run 1
+# Events:
+#   Type    Reason     Age    From               Message
+#   ----    ------     ----   ----               -------
+#   Normal  Scheduled  9m40s  default-scheduler  Successfully assigned winpods-tests/48-2022-acr-pod to akswin19000007
+#   Normal  Pulling    9m39s  kubelet            Pulling image "acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-10gb-ltsc2019:latest"
+#   Normal  Pulled     3m20s  kubelet            Successfully pulled image "acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-10gb-ltsc2019:latest" in 6m18.626s (6m18.626s including waiting). Image size: 3081157650 bytes.
+#   Normal  Created    3m20s  kubelet            Created container: windows-container
+#   Normal  Started    2m31s  kubelet            Started container windows-container
+# => Scheduled to Started: 7m9s / image pull: 6m18.626s / Size: ~2.8 GB
+
+
+# # Run 2
+# => Scheduled to Started: 44s / image pull: 23s / Size: ~2.4 GB
+
+
+# # Run 3
+# => Scheduled to Started: 44s / image pull: 23s / Size: ~2.4 GB
+
+
+# # Run 4
+# => Scheduled to Started: 44s / image pull: 23s / Size: ~2.4 GB
+
+
+# # Run 5
+# => Scheduled to Started: 44s / image pull: 23s / Size: ~2.4 GB
+
+

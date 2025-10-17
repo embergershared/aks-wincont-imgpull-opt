@@ -1,0 +1,6 @@
+# Use the specified base image  
+FROM mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-ltsc2019
+
+# Add a 2.5GB file to reach ~10GB total image size
+# (adjust the size as needed to reach your target)
+RUN fsutil file createnew C:\\dummyfile25GB 2523293286
