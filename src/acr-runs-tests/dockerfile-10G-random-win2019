@@ -1,0 +1,5 @@
+# Use the specified base image
+FROM mcr.microsoft.com/dotnet/framework/runtime:4.8-windowsservercore-ltsc2019
+
+# Copy a large Windows 10 ISO to simulate a large image
+COPY en-us_windows_11_consumer_editions_version_24h2_x64_dvd_1d5fcad3.iso /windisk.iso
