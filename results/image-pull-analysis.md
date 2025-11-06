@@ -1,7 +1,11 @@
 # AKS Windows Pod Image Pull Performance Analysis
 
 ## 1. Scope
-This report analyzes cold and warm start image pull performance for Windows container pods on AKS using an Azure Container Registry (ACR) in close proximity to the cluster. Data comes from the commented event timelines inside:
+
+This report analyzes cold and warm start image pull performance for Windows container pods on AKS using an Azure Container Registry (ACR) in close proximity to the cluster.
+
+Data comes from the commented event timelines inside:
+
 - `src/acr-runs-tests/48_2019_acr_pod.yaml`
 - `src/acr-runs-tests/48_2019_acr_pod_winiso.yaml`
 
@@ -15,13 +19,15 @@ Focus: Time from Scheduled → Started (or Created where Started not logged) and
 |-----------------------|-------|-----------------------|-------------------|---------------|
 | `run48-10gb-ltsc2019:latest` | Compressed to ~2.87 GiB | 3,081,157,650 | 2.87 | 9.91 GB |
 | `run48-74gb-rand-ltsc2019:latest` | Compressed to ~2.88 GiB | 3,089,505,742 | 2.88 | 7.41 GB |
-| `run48-winiso-ltsc2019:latest` | Large ISO layers | 8,727,972,237 | 8.13 | 13.17 GB |
+| `run48-winiso-ltsc2019:latest` | Includes a large ISO file to reduce image compression | 8,727,972,237 | 8.13 | 13.17 GB |
 
 Note: The inflated (uncompressed) sizes are significantly larger than compressed transfer sizes, explaining the extended decompression/extraction time on Windows nodes.
 
 ## 3. Cold Start Results Summary
 
-### 3.1 ACR Standard Tier - Smaller (~2.87–2.88 GiB) Images
+Cold starts measured on freshly provisioned Windows nodes with no prior image cache.
+
+### 3.1 ACR Standard Tier - Smaller (~2.87-2.88 GiB) Images
 
 | Run | Scheduled→Started | Image Pull | Effective Pull Rate (MiB/s) |
 |-----|-------------------|-----------|------------------------------|
@@ -49,7 +55,7 @@ Variability suggests node/network contention differences.
 - Average Scheduled→Started: 436.6 s (≈7m17s)
 - Fastest pull: 243.8 s (Run 7)
 - Slowest pull: 406.6 s (Run 6)
-- Effective throughput range: 20.5–34.2 MiB/s; average ~24.8 MiB/s
+- Effective throughput range: 20.5-34.2 MiB/s; average ~24.8 MiB/s
 
 ### 3.3 ACR Premium Tier - Larger (~8.13 GiB) Image Cold Pulls
 
@@ -63,7 +69,7 @@ Variability suggests node/network contention differences.
 
 - Average cold pull time: 225.5 s (≈3m46s)
 - Average Scheduled→Started: 253.3 s (≈4m13s)
-- Effective throughput range: 36.9–38.8 MiB/s; average ~37.6 MiB/s
+- Effective throughput range: 36.9-38.8 MiB/s; average ~37.6 MiB/s
 
 **ACR Premium vs Standard Improvement:**
 
@@ -73,11 +79,10 @@ Variability suggests node/network contention differences.
 
 ### 3.4 Observations
 
-- **ACR Premium delivers significant performance gains** with ~36% faster cold pull times and 52% higher throughput.
+- **ACR Premium delivers significant performance gains** with ~36% faster cold pull times and 52% higher throughput than Standard tier.
+- Using ACR close to AKS cluster region minimizes network latency; tier choice impacts throughput more. The maximum pull duration for the larger image and Premium tier was ~3m46s vs ~6m46s for Standard, and way more with current Artifactory Container registry.
 - Pull duration dominates overall startup (>80% of Scheduled→Started in most runs).
-- Variability in Standard tier (20–34 MiB/s) vs consistent Premium performance (37–39 MiB/s) indicates Premium's dedicated throughput.
-- Larger image's cold pull time scales sub-linearly vs size due to compression; throughput plateaus.
-- Absence of Started events in some runs (only Created) may reflect logging cutoff before container start; actual start likely seconds later—does not materially change pull analysis.
+- Variability in Standard tier (20-34 MiB/s) vs consistent Premium performance (37-39 MiB/s) highlights Premium's dedicated throughput.
 
 ## 4. Warm Start Results (Cached Image)
 
@@ -95,108 +100,59 @@ Warm improvement factors (vs cold averages):
 
 1. Large compressed image layers require sequential download + decompression on Windows node disks.
 2. Throughput bounded by:
-   - **ACR tier**: Standard tier shows variable throughput (20–34 MiB/s); Premium provides consistent higher throughput (37–39 MiB/s) with dedicated infrastructure.
+   - **ACR tier**: Standard tier shows variable throughput (20-34 MiB/s); Premium provides consistent higher throughput (37-39 MiB/s) with dedicated infrastructure.
    - Network bandwidth from ACR to node (regional proximity helps but tier matters significantly).
    - Node disk I/O (Windows container layer extraction tends to be slower than Linux).
-3. Layer cache absence in cold starts—nodes may have been newly scaled or previously evicted layers.
-4. Image composition (bundled large ISO / static assets) inflates cold pull times.
-5. Scheduling overhead comparatively minor; main optimization target is image cold pull + ACR performance tier.
+3. Image composition (bundled large ISO / static assets) inflates cold pull times.
+4. Scheduling and Extraction (estimated by the `Pulled` to `Created` duration) generates comparatively minor waits; main optimization target is image cold pull + ACR performance tier.
 
-## 6. Technical Management Recommendations
+## 6. Technical Recommendations
 
 ### 6.1 Image Optimization
 
-- Remove large ISO or infrequently-used binary payloads from the image; mount via Azure File share, Blob Fuse, or on-demand download at runtime.
-- Split monolithic image into a slim base plus sidecar (e.g., data loader) to minimize primary container cold path.
-- Multi-stage builds to strip tooling, temp artifacts, and symbol files.
-- Deduplicate layers: ensure high-churn files are isolated in final layers to avoid invalidating large base layers.
-- Consider enabling experimental zstd compression (where supported) for higher decompression speed / smaller transfer.
-- Standardize on Windows Server 2022 base images (often smaller + performance improvements) if application compatible.
+1. Use Windows Server 2022 base images (often smaller + performance improvements) if application compatible.
+2. Remove large static assets (e.g., ISOs) from image layers; mount as volumes or download at runtime.
+3. Use multi-stage builds to strip tooling, temp artifacts, and symbol files.
+4. Deduplicate layers: ensure high-churn files are isolated in final layers to avoid the risk to invalidate large layers.
 
 ### 6.2 ACR & Network
 
-- **CRITICAL: Upgrade ACR to Premium SKU** — testing demonstrates 36% faster pull times, 52% higher throughput, and 42% faster end-to-end startup vs Standard tier. Premium provides dedicated infrastructure and consistent performance.
-- Enable ACR Private Link for consistent, low-latency private network path (reduces variability seen in Standard tier).
+- **Consider using an Azure Container Registry Premium SKU** to pull large and slow to cold start image(s), such as `compass`: testing demonstrates 36% faster pull times, 52% higher throughput, and 42% faster end-to-end startup vs ACR Standard tier. Premium provides dedicated infrastructure and consistent performance.
+- Enable / Use ACR Private Endpoint to the AKS VNet for consistent (which requires ACR Premium also), low-latency private network path (reduces variability seen in Standard tier).
 - Ensure ACR region matches AKS region for minimum network latency.
-- Pre-stage frequently used images using ACR Tasks & scheduled builds to keep layers hot in CDN edge cache.
-- Consider geo-replication with Premium for multi-region deployments.
 
 ### 6.3 AKS Node & Operational Practices
 
-- Implement a DaemonSet (Windows HostProcess) that performs `crictl pull` (or `kubectl run` transient pod) of critical images immediately after node scale-out to convert future cold starts into warm starts.
-- Use `imagePullPolicy: IfNotPresent` (default for :latest sometimes causes unneeded checks; pin digests and rely on cache).
-- Consider a custom Windows node image (if available in future AKS capabilities) pre-loaded with base layers.
+- Evaluate and Tune the DaemonSet (Windows HostProcess) drafted in `.src/aks/prewarm-images-daemonset.yaml` that performs`crictl pull` (or `kubectl run` transient pod) of critical images immediately after node scale-out to convert ease cold starts into warm starts, if nodes are scaling a little ahead of workload scheduling.
 - Monitor node disk performance (Managed Disk / Ephemeral OS disk); if constrained, move to faster SKU or larger disk for better I/O concurrency.
-- Stagger scale-outs and pre-warm images before routing workloads to new nodes (pod disruption budgets + taints).
 
-### 6.4 Build & Governance
+### 6.4 Cost-Performance Trade-offs
 
-- Track image size trend per release; enforce size budgets (e.g., warn >3 GiB, block >5 GiB except justified).
-- Add CI step to produce layer size diff report (e.g., `docker buildx imagetools inspect`).
-- Maintain SBOM separately—avoid embedding large compliance artifacts inside runtime layers.
-
-### 6.5 Observability & SLOs
-
-- Define SLO: 95% of pod cold starts <4 minutes by Q2; 99% warm starts <6 seconds.
-- Instrument: capture `Started - Scheduled` and `Pulling → Pulled` durations via AKS events into Log Analytics / Azure Monitor dashboards.
-- Alert on sustained pull throughput <15 MiB/s indicating network or ACR performance issues.
-
-### 6.6 Cost–Performance Trade-offs
-
-- **Premium ACR upgrade**: Adds ~$20/day vs Standard but delivers 36–42% startup improvement; ROI is immediate for time-sensitive workloads.
-- Premium ACR + pre-warming adds minimal ops cost but yields >100× cold start improvement in practice when cache hits dominate.
+- **Premium ACR upgrade**: Adds ~$20/day vs Standard but delivers 36-42% startup improvement; ROI is immediate for time-sensitive workloads.
 - Image slimming reduces storage and egress (if multi-region), indirectly lowering costs.
 
-## 7. Prioritized Action Plan (Next 30–60 Days)
+## 7. Summary
 
-1. **IMMEDIATE: Upgrade to ACR Premium** — proven 36% pull time reduction and 52% throughput gain.
-2. Quick Win: Implement image pre-warm DaemonSet on Windows node pool.
-3. Image Hygiene: Refactor large ISO assets into runtime-mounted volumes.
-4. Layer Audit: Automate CI layer size report; set alert thresholds.
-5. Base Image Migration: Test Windows Server 2022 base for compatibility & performance gains.
-6. Observability: Dashboard for pull durations + scheduled→started latency.
+**Measured Results:**
 
-## 8. KPIs to Track Post-Optimization
-
-| KPI | Baseline (Standard) | Target (Premium) |
-|-----|---------------------|------------------|
-| Avg cold pull (8.13 GiB image) | 350 s (5m50s) | 226 s (3m46s) ✓ achieved |
-| Avg scheduled→started (cold) | 437 s (7m17s) | <270 s (4m30s) |
-| Warm start scheduled→started | 4 s | Maintain ≤5 s |
-| Image compressed size | 8.13 GiB | <5 GiB |
-| Cache hit rate (critical deployments) | Unknown | >90% |
-| Pull throughput (MiB/s) | 24.8 | 37.6 ✓ achieved |
-
-## 9. Risks & Mitigations
-
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| ACR Premium cost increase | Budget impact ~$600/mo | Justify with 42% faster deployments; critical for production SLAs |
-| Large refactor of image assets delays releases | Time-to-market | Phase changes; start with moving ISO only |
-| Pre-warm DaemonSet increases node startup CPU | Slower scale-up | Limit concurrency; prioritize critical images |
-| Digest pinning complicates frequent rotations | Operational overhead | Automate digest update via pipeline variable |
-| Private Link misconfiguration | Connectivity failures | Staged rollout, validation in non-prod first |
-
-## 10. Summary
-
-**Measured Results:** ACR Premium delivers 36% faster cold pull times (5m50s → 3m46s), 52% higher throughput (24.8 → 37.6 MiB/s), and 42% faster end-to-end startup (7m17s → 4m13s) compared to ACR Standard for large Windows container images. Warm cache performance remains consistently fast at ~4 seconds regardless of tier.
+- ACR Premium delivers 36% faster cold pull times (5m50s → 3m46s), 52% higher throughput (24.8 → 37.6 MiB/s), and 42% faster end-to-end startup (7m17s → 4m13s) compared to ACR Standard for large Windows container images (~8.13 GiB).
+- Warm cache performance remains consistently fast at ~4 seconds regardless of tier.
 
 **Key Findings:**
 
 - Pull duration dominates overall startup latency (>80%)
-- ACR Standard shows variable performance (20–34 MiB/s); Premium is consistent (37–39 MiB/s)
+- ACR Standard shows variable performance (20-34 MiB/s); Premium is consistent (37-39 MiB/s)
 - Image decompression overhead on Windows (2.87 GB compressed → 9.91 GB inflated) adds significant extraction time
 - Warm caching is extremely effective but requires proactive pre-warming strategy
 
-**Primary Optimization Levers (Ranked by Impact):**
+**Short-term Optimization Levers (Ranked by Impact):**
 
-1. **ACR Premium upgrade** (proven 36–42% improvement)
-2. Image slimming (remove bulky ISO/static assets)
-3. Proactive pre-warming via DaemonSet
+1. **ACR Premium upgrade** (proven 36-42% improvement)
+2. Image slimming (reduce image layers size, consider pulling assets from other sources instead of putting them in the image itself)
+3. Proactive pre-warming via DaemonSet - will optimize the cold start into warm start for scaled nodes, if auto-scaling up node is tuned to "prepare" nodes ahead of workload scheduling
 4. Governance around image composition
 
-Executing the proposed plan should achieve sub-4-minute cold starts and maintain near-instant warm starts for production workloads.
+Executing the proposed plan should achieve sub-4-minute cold starts for a large Windows container image (~8.13 GiB) and maintain near-instant warm starts for production workloads.
 
 ---
-Prepared: (Automated analysis)
 Date: 2025-11-06
