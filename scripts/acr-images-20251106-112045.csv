@@ -1,0 +1,8 @@
+"Repository","Tags","Digest","SizeBytes","SizeHuman","LayerCount","LastModified","Architecture","OS"
+"hal-dwp/run48-10gb-ltsc2019","latest","sha256:ad4e758dd3a8","3081156274","2.87 GiB","5",,,
+"hal-dwp/run48-74gb-rand-ltsc2019","latest","sha256:67e2a4cc6c16","3089504157","2.88 GiB","6",,,
+"hal-dwp/run48-winiso-ltsc2019","latest","sha256:5338f546b732","8727970858","8.13 GiB","5",,,
+"run35-svrcore-ltsc2019","latest","sha256:a10853e5b47f","3077288192","2.87 GiB","4",,,
+"run35-svrcore-ltsc2022","latest","sha256:d0a08a795b84","2849746539","2.65 GiB","4",,,
+"run48-svrcore-ltsc2019","latest","sha256:5b83eb3d9d0b","3072609687","2.86 GiB","4",,,
+"run48-svrcore-ltsc2022","latest","sha256:398334868084","2374022373","2.21 GiB","4",,,

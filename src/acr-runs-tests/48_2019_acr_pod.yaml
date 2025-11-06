@@ -21,6 +21,8 @@ spec:
     kubernetes.azure.com/agentpool: win19
 
 
+# acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-10gb-ltsc2019:latest image inflated size: 9.91 GB
+
 ##########################   COLD start results:
 # # Run 1
 # Events:

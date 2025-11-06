@@ -1,0 +1,98 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: image-prewarm
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prewarm-sa
+  namespace: image-prewarm
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prewarm-config
+  namespace: image-prewarm
+data:
+  IMAGES: |
+    acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-10gb-ltsc2019:latest
+    acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-74gb-rand-ltsc2019:latest
+    acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-winiso-ltsc2019:latest
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: windows-image-prewarm
+  namespace: image-prewarm
+  labels:
+    app: windows-image-prewarm
+spec:
+  selector:
+    matchLabels:
+      app: windows-image-prewarm
+  template:
+    metadata:
+      labels:
+        app: windows-image-prewarm
+    spec:
+      serviceAccountName: prewarm-sa
+      nodeSelector:
+        kubernetes.io/os: windows
+      tolerations:
+        - key: "os"
+          operator: "Equal"
+          value: "Windows"
+          effect: "NoSchedule"
+      securityContext:
+        windowsOptions:
+          hostProcess: true
+          runAsUserName: "NT AUTHORITY\\SYSTEM"
+      hostNetwork: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      volumes:
+        - name: config
+          configMap:
+            name: prewarm-config
+      containers:
+        - name: prewarm
+          image: mcr.microsoft.com/oss/kubernetes/windows-host-process-containers-base-image:v1.0.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - powershell
+            - -Command
+            - |
+              Write-Host "Starting image pre-warm on node $(hostname)";
+              $images = (Get-Content -Raw -Path 'C:\Config\IMAGES').Split("`n") | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" };
+              $ctrPath = "C:\Program Files\containerd\ctr.exe";
+              foreach ($img in $images) {
+                Write-Host "Pulling $img ..."
+                $pulled = $false
+                if (Test-Path $ctrPath) {
+                  & $ctrPath -n k8s.io images pull $img 2>&1 | Write-Host
+                  if ($LASTEXITCODE -eq 0) { $pulled = $true }
+                }
+                if (-not $pulled) {
+                  Write-Host "Fallback: attempting 'crictl pull'..."
+                  $crictl = "C:\k\crictl.exe"
+                  if (Test-Path $crictl) {
+                    & $crictl pull $img 2>&1 | Write-Host
+                  } else {
+                    Write-Warning "Neither ctr nor crictl succeeded for $img"
+                  }
+                }
+              }
+              Write-Host "Image pre-warm cycle complete. Sleeping before next verification."
+              Start-Sleep -Seconds 1800
+          volumeMounts:
+            - name: config
+              mountPath: C:\Config
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

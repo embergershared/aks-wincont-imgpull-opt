@@ -21,13 +21,18 @@ spec:
     kubernetes.azure.com/agentpool: win19
 
 
+# acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-7.4gb-rand-ltsc2019:latest image inflated size: 7.41 GB
+# acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-winiso-ltsc2019:latest image inflated size: 13.17 GB
+
+##########################   ACR STANDARD pod image pull tests   ##########################
+
 ##########################   COLD start results   ##########################
 # # Run 1
 # Events:
 #   Type    Reason     Age   From               Message
 #   ----    ------     ----  ----               -------
 #   Normal  Scheduled  4m8s  default-scheduler  Successfully assigned winpods-tests/48-2019-acr-pod-74gb-rand to akswin1900000c
-#   Normal  Pulling    4m6s  kubelet            Pulling image "acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-74gb-rand-ltsc2019:latest"
+#   Normal  Pulling    4m6s  kubelet            Pulling image "acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-7.4gb-rand-ltsc2019:latest"
 #   Normal  Pulled     58s   kubelet            Successfully pulled image "acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-74gb-rand-ltsc2019:latest" in 3m8.58s (3m8.58s including waiting). Image size: 3089505742 bytes.
 #   Normal  Created    58s   kubelet            Created container: windows-container
 #   Normal  Started    33s   kubelet            Started container windows-container
@@ -108,11 +113,6 @@ spec:
 # => Scheduled to Started: 8m16s / image pull: 6m38s / Size: ~8.12 GB
 
 
-
-
-
-
-
 ##########################   WARM start results   ##########################
 # # Run 1
 # Events:
@@ -135,3 +135,40 @@ spec:
 #   Normal  Created    23s   kubelet            Created container: windows-container
 #   Normal  Started    21s   kubelet            Started container windows-container
 # => Scheduled to Started: 4s / image pull: 0.401s / Size: ~8.12 GB
+
+
+
+##########################   ACR PREMIUM pod image pull tests   ##########################
+
+##########################   COLD start results   ##########################
+# # Run 1
+# Events:
+#   Type    Reason     Age   From               Message
+#   ----    ------     ----  ----               -------
+#   Normal  Scheduled  4m9s  default-scheduler  Successfully assigned default/48-2019-winiso-pod to akswin1900000l
+#   Normal  Pulling    4m8s  kubelet            Pulling image "acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-winiso-ltsc2019:latest"
+#   Normal  Pulled     32s   kubelet            Successfully pulled image "acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-winiso-ltsc2019:latest" in 3m35.747s (3m35.747s including waiting). Image size: 8727972237 bytes.
+#   Normal  Created    30s   kubelet            Created container: windows-container
+# => Scheduled to Started: 3m39s / image pull: 3m35s / Size: ~8.12 GB
+
+# # Run 2
+# Events:
+#   Type    Reason     Age    From               Message
+#   ----    ------     ----   ----               -------
+#   Normal  Scheduled  7m43s  default-scheduler  Successfully assigned default/48-2019-winiso-pod to akswin1900000m
+#   Normal  Pulling    7m41s  kubelet            Pulling image "acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-winiso-ltsc2019:latest"
+#   Normal  Pulled     3m54s  kubelet            Successfully pulled image "acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-winiso-ltsc2019:latest" in 3m46.793s (3m46.793s including waiting). Image size: 8727972237 bytes.
+#   Normal  Created    3m51s  kubelet            Created container: windows-container
+#   Normal  Started    2m46s  kubelet            Started container windows-container
+# => Scheduled to Started: 4m47s / image pull: 3m46s / Size: ~8.12 GB
+
+# # Run 3
+# Events:
+#   Type    Reason     Age    From               Message
+#   ----    ------     ----   ----               -------
+#   Normal  Scheduled  4m25s  default-scheduler  Successfully assigned default/48-2019-winiso-pod to akswin1900000n
+#   Normal  Pulling    4m23s  kubelet            Pulling image "acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-winiso-ltsc2019:latest"
+#   Normal  Pulled     39s    kubelet            Successfully pulled image "acrusw3391575s4halwincont.azurecr.io/hal-dwp/run48-winiso-ltsc2019:latest" in 3m44.092s (3m44.092s including waiting). Image size: 8727972237 bytes.
+#   Normal  Created    36s    kubelet            Created container: windows-container
+# => Scheduled to Started: 3m49s / image pull: 3m44s / Size: ~8.12 GB
+
