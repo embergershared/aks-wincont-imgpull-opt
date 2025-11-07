@@ -29,7 +29,7 @@ Focus: Time from Scheduled → Started (or Created where Started not logged) and
 
 ## 3. Cold Start Results Summary
 
-Cold starts measured on freshly provisioned Windows nodes with no prior image cache.
+Cold starts are measured on freshly provisioned Windows nodes with no prior image cache.
 
 ### 3.1 ACR Standard Tier - Smaller (~2.87-2.88 GiB) Images
 
@@ -38,7 +38,6 @@ Cold starts measured on freshly provisioned Windows nodes with no prior image ca
 | 10gb-ltsc2019 | 7m09s | 6m18.626s | ~7.8 MiB/s |
 | 74gb-rand-ltsc2019 | 3m35s | 3m8.58s | ~15.7 MiB/s |
 
-Variability suggests node/network contention differences.
 
 ### 3.2 ACR Standard Tier - Larger (~8.13 GiB) Image Cold Pulls
 
@@ -115,25 +114,26 @@ Warm improvement factors (vs cold averages):
 ### 6.1 Image Optimization
 
 1. Use Windows Server 2022 base images (often smaller + performance improvements) if application compatible.
-2. Remove large static assets (e.g., ISOs) from image layers; mount as volumes or download at runtime.
-3. Use multi-stage builds to strip tooling, temp artifacts, and symbol files.
-4. Deduplicate layers: ensure high-churn files are isolated in final layers to avoid the risk to invalidate large layers.
+2. Remove large static assets from image layers; mount as volumes, async copy at container start, or download at runtime.
+3. Use multi-stage optimized builds and layers to strip tooling, temp artifacts, to reduce image size.
 
 ### 6.2 ACR & Network
 
-- **Consider using an Azure Container Registry Premium SKU** to pull large and slow to cold start image(s), such as `compass`: testing demonstrates 36% faster pull times, 52% higher throughput, and 42% faster end-to-end startup vs ACR Standard tier. Premium provides dedicated infrastructure and consistent performance.
-- Enable / Use ACR Private Endpoint to the AKS VNet for consistent (which requires ACR Premium also), low-latency private network path (reduces variability seen in Standard tier).
+- **Consider using an Azure Container Registry Premium SKU** to pull large and slow to cold start image(s), such as `compass` :
+   - Testing demonstrates 36% faster pull times, 52% higher throughput, and 42% faster end-to-end startup vs ACR Standard tier.
+   - Premium provides higher throughput infrastructure, consistent performance (and Private Endpoints - see next).
+- Enable & Use ACR Private Endpoint created on the AKS VNet for consistent, low-latency private network path.
 - Ensure ACR region matches AKS region for minimum network latency.
 
 ### 6.3 AKS Node & Operational Practices
 
-- Evaluate and Tune the DaemonSet (Windows HostProcess) drafted in `.src/aks/prewarm-images-daemonset.yaml` that performs`crictl pull` (or `kubectl run` transient pod) of critical images immediately after node scale-out to convert ease cold starts into warm starts, if nodes are scaling a little ahead of workload scheduling.
+- Evaluate the `DaemonSet` (Windows HostProcess) drafted in `.src/aks/prewarm-images-daemonset.yaml` that performs`crictl pull` (or `kubectl run` transient pod) of critical images immediately after node scale-out to convert ease cold starts into warm starts, if nodes are scaling a little ahead of workload scheduling - PLEASE NOTE: it was not tested in the analysis environment.
 - Monitor node disk performance (Managed Disk / Ephemeral OS disk); if constrained, move to faster SKU or larger disk for better I/O concurrency.
 
 ### 6.4 Cost-Performance Trade-offs
 
 - **Premium ACR upgrade**: Adds ~$20/day vs Standard but delivers 36-42% startup improvement; ROI is immediate for time-sensitive workloads.
-- Image slimming reduces storage and egress (if multi-region), indirectly lowering costs.
+- Image slimming reduces storage and network traffic, indirectly lowering costs.
 
 ## 7. Summary
 
@@ -154,7 +154,12 @@ Warm improvement factors (vs cold averages):
 1. **ACR Premium upgrade** (proven 36-42% improvement)
 2. Image slimming (reduce image layers size, consider pulling assets from other sources instead of putting them in the image itself)
 3. Proactive pre-warming via DaemonSet - will optimize the cold start into warm start for scaled nodes, if auto-scaling up node is tuned to "prepare" nodes ahead of workload scheduling
-4. Governance around image composition
+4. Improvements around image composition (removing large static assets, multi-stage builds, smaller layers, etc.)
+
+**Mid/Long-term Optimization Levers:**
+
+- Move to Windows Server 2022 base images and AKS Windows nodes for better performance and smaller sizes,
+- Upgrade the application from .NET Framework to .NET Core on Linux containers for better image sizes and performance.
 
 Executing the proposed plan should achieve sub-4-minute cold starts for a large Windows container image (~8.13 GiB) and maintain near-instant warm starts for production workloads.
 
