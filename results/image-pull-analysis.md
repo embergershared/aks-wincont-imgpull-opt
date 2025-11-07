@@ -15,11 +15,11 @@ Focus: Time from Scheduled → Started (or Created where Started not logged) and
 
 ## 2. Test Images
 
-| Image Tag (as logged) | Notes | Reported Size (bytes) | Approx Size (GiB) | Inflated Size |
-|-----------------------|-------|-----------------------|-------------------|---------------|
-| `run48-10gb-ltsc2019:latest` | Compressed to ~2.87 GiB | 3,081,157,650 | 2.87 | 9.91 GB |
-| `run48-74gb-rand-ltsc2019:latest` | Compressed to ~2.88 GiB | 3,089,505,742 | 2.88 | 7.41 GB |
-| `run48-winiso-ltsc2019:latest` | Includes a large ISO file to reduce image compression | 8,727,972,237 | 8.13 | 13.17 GB |
+| Image Tag (as logged) | Notes | Reported Size (bytes) | Approx Size  | Actual Size |
+|-----------------------|-------|-----------------------|-------------------|-------------|
+| `run48-10gb-ltsc2019:latest` | Compressed to ~2.87 GiB | 3,081,157,650 | 2.87 GB | 9.91 GB |
+| `run48-74gb-rand-ltsc2019:latest` | Compressed to ~2.88 GiB | 3,089,505,742 | 2.88 GB | 7.41 GB |
+| `run48-winiso-ltsc2019:latest` | Includes a large ISO file to reduce image compression | 8,727,972,237 | 8.13 GB | 13.17 GB |
 
 > Note:
 > - The image compression is very efficient.
