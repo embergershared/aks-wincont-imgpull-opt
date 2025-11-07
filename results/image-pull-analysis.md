@@ -17,9 +17,9 @@ Focus: Time from Scheduled → Started (or Created where Started not logged) and
 
 | Image Tag (as logged) | Notes | Image pull reported size (GB) | Actual Size (GB) |
 |-----------------------|-------|-----------------------|-------------|
-| `run48-10gb-ltsc2019:latest` | Compressed to ~2.87 GiB |  2.87 GB | 9.91 GB |
-| `run48-74gb-rand-ltsc2019:latest` | Compressed to ~2.88 GiB | 2.88 GB | 7.41 GB |
-| `run48-winiso-ltsc2019:latest` | Includes a large ISO file to reduce image compression | 8.13 GB | 13.17 GB |
+| `run48-10gb-ltsc2019:latest` | Compressed to ~2.87 GiB |  2.87 | 9.91  |
+| `run48-74gb-rand-ltsc2019:latest` | Compressed to ~2.88 GiB | 2.88  | 7.41  |
+| `run48-winiso-ltsc2019:latest` | Includes a large ISO file to reduce image compression | 8.13  | 13.17  |
 
 > Note:
 > - The image compression is very efficient.
